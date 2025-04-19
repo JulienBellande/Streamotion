@@ -8,6 +8,7 @@ from ipywidgets import interact, FloatSlider
 import numpy as np
 import os
 import json
+import streamlit as st
 from dotenv import load_dotenv
 
 
@@ -20,8 +21,13 @@ gcp_key = json.loads(gcp_key_str)
 class Graph():
 
     def __init__(self):
-        self.credentials = service_account.Credentials.from_service_account_info(gcp_key)
-        self.client = bigquery.Client(credentials=self.credentials, project=self.credentials.project_id)
+        creds_dict = st.secrets["gcp_credentials"]
+        self.credentials = service_account.Credentials.from_service_account_info(creds_dict)
+        self.project_id = creds_dict["project_id"]
+        self.client = bigquery.Client(
+            credentials=self.credentials,
+            project=self.project_id
+        )
 
     def graph_emotion(self):
         query = """
