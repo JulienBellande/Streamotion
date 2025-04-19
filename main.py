@@ -49,7 +49,7 @@ if page == "Streamotion":
 
             time.sleep(5)
 
-elif page == "📄 Documentation":
+elif page == "Streamotion: Documentation":
     st.markdown("## 📚 Documentation")
 
     readme_path = os.path.join(os.getcwd(), "docs", "README.md")
