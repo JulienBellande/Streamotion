@@ -9,14 +9,6 @@ import numpy as np
 import os
 import json
 import streamlit as st
-from dotenv import load_dotenv
-
-
-load_dotenv()
-
-
-gcp_key_str = os.getenv("GCP_KEY")
-gcp_key = json.loads(gcp_key_str)
 
 class Graph():
 
