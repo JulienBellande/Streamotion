@@ -1,6 +1,7 @@
 import streamlit as st
 from graph import Graph
 import time
+import os
 
 graph = Graph()
 
@@ -50,4 +51,9 @@ if page == "Streamotion":
 
 elif page == "📄 Documentation":
     st.markdown("## 📚 Documentation")
-    st.write("Cette section est en cours de rédaction. Revenez bientôt !")
+
+    readme_path = os.path.join(os.getcwd(), "docs", "README.md")
+
+    with open(readme_path, "r") as file:
+        content = file.read()
+        st.markdown(content)

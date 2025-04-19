@@ -6,8 +6,6 @@ from scipy.spatial.distance import cdist
 from math import pi, sin, cos
 from ipywidgets import interact, FloatSlider
 import numpy as np
-import os
-import json
 import streamlit as st
 
 class Graph():

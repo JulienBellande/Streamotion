@@ -23,19 +23,19 @@ Streamotion est un projet d'analyse en temps réel des émotions des utilisateur
 ```bash
 .
 ├── app
-│   ├── api.py                # FastAPI pour l'analyse des émotions
-│   ├── extract.py            # Producteur Kafka pour extraire les commentaires Reddit
-│   └── trans_load.py         # Consommateur Kafka et traitement avec Spark
+│   ├── api.py
+│   ├── extract.py
+│   └── trans_load.py
 ├── archi_docker
-│   ├── dockerfile.api        # Dockerfile pour l'API FastAPI
-│   ├── dockerfile.produceur  # Dockerfile pour le producteur Kafka
-│   └── dockerfile.spark      # Dockerfile pour le service Spark
-├── docker-compose.yml        # Orchestration des services Docker
-├── graph.py                  # Visualisation des émotions
-├── main.py                   # Point d'entrée du projet
-├── requirements.txt          # Dépendances Python
+│   ├── dockerfile.api
+│   ├── dockerfile.produceur
+│   └── dockerfile.spark
+├── docker-compose.yml
+├── graph.py
+├── main.py
+├── requirements.txt
 └── tests/
-    ├── tests.py              # Tests unitaires et d'intégration
+    ├── tests.py
 ```
 
 ---
