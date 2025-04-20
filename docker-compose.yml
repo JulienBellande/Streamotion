@@ -52,14 +52,14 @@ services:
   producer:
     build:
       context: .
-      dockerfile: archi_docker/Dockerfile.producer
+      dockerfile: archi_docker/dockerfile.producer
     depends_on:
       - kafka
 
   api:
     build:
       context: .
-      dockerfile: archi_docker/Dockerfile.api
+      dockerfile: archi_docker/dockerfile.api
     ports:
       - "8000:8000"
     depends_on:
@@ -68,7 +68,7 @@ services:
   trans_load:
     build:
       context: .
-      dockerfile: archi_docker/Dockerfile.spark
+      dockerfile: archi_docker/dockerfile.spark
     depends_on:
       - kafka
       - spark-master
