@@ -17,6 +17,7 @@ services:
     environment:
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
       - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CREATE_TOPICS=reddit_comments:1:1
       - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
       - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,PLAINTEXT_HOST://:29092
@@ -36,6 +37,11 @@ services:
     ports:
       - "8080:8080"
       - "7077:7077"
+    healthcheck:
+      test: ["CMD-SHELL", "netstat -tuln | grep 7077"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   spark-worker:
     image: bitnami/spark:3.4
@@ -49,8 +55,19 @@ services:
       - "8081:8081"
     volumes:
       - ./archi_docker/requirement.spark.txt:/tmp/requirements.txt
+    depends_on:
+      spark-master:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "netstat -tuln | grep 8081"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     command: >
-      bash -c "pip install --no-warn-script-location -r /tmp/requirements.txt && /opt/bitnami/scripts/spark/run.sh"
+      bash -c "
+        pip install --no-warn-script-location -r /tmp/requirements.txt &&
+        /opt/bitnami/scripts/spark/run.sh
+      "
 
   trans_load:
     build:
@@ -62,10 +79,13 @@ services:
       - PYSPARK_PYTHON=/opt/bitnami/python/bin/python
       - PYSPARK_DRIVER_PYTHON=/opt/bitnami/python/bin/python
     depends_on:
-      - spark-master
-      - spark-worker
+      spark-master:
+        condition: service_healthy
+      spark-worker:
+        condition: service_healthy
     volumes:
       - ./app:/app
+      - ./checkpoints:/tmp/checkpoints
     mem_limit: 2g
     cpus: '1'
 
