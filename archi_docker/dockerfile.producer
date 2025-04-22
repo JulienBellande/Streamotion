@@ -2,12 +2,11 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# Installer les packages Python sans conflit de permissions
-COPY archi_docker/requirement.producer.txt ./requirements.txt
-RUN pip install --upgrade pip --root-user-action=ignore && \
-    pip install --no-cache-dir --root-user-action=ignore -r requirements.txt
+COPY archi_docker/requirement.producer.txt ./
+RUN pip install --upgrade pip --root-user-action=ignore \
+ && pip install --no-cache-dir -r requirement.producer.txt \
+ && pip install praw==7.8.1
 
-# Copier le code du producteur d’événements
-COPY app/extract.py ./extract.py
+COPY app/extract.py ./
 
 CMD ["python", "extract.py"]
