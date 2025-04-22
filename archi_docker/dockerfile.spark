@@ -2,16 +2,22 @@ FROM bitnami/spark:3.4
 
 WORKDIR /app
 
-RUN apt-get update && \
+RUN mkdir -p /var/lib/apt/lists/partial && \
+    apt-get update && \
     apt-get install -y --no-install-recommends gcc python3-dev && \
     rm -rf /var/lib/apt/lists/*
 
+# Installer les dépendances Python
 COPY ./archi_docker/requirement.spark.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
+# Copier le script Spark
 COPY ./app/trans_load.py /app/
+
+# Créer le dossier de checkpoints
 RUN mkdir -p /tmp/checkpoints
 
+# Lancer Spark avec les bons paramètres
 CMD ["spark-submit", \
     "--master", "spark://spark-master:7077", \
     "--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1", \
