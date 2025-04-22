@@ -3,8 +3,9 @@ FROM bitnami/spark:3.4
 # Définir le répertoire de travail
 WORKDIR /app
 
-# Mettre à jour les listes de paquets et installer Python 3.10
-RUN apt-get update && \
+# Mise à jour du cache apt et installation de Python
+RUN rm -rf /var/lib/apt/lists/* && \
+    apt-get update && \
     apt-get install -y --no-install-recommends \
     gcc \
     python3.10 \
