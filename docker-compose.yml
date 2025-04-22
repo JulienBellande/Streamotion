@@ -33,11 +33,12 @@ services:
       - SPARK_MASTER_HOST=spark-master
       - SPARK_MASTER_PORT=7077
       - SPARK_MASTER_WEBUI_PORT=8080
+      - SPARK_DAEMON_MEMORY=1g
     ports:
       - "8080:8080"
       - "7077:7077"
     healthcheck:
-      test: ["CMD-SHELL", "netstat -tuln | grep 7077"]
+      test: ["CMD-SHELL", "netstat -tuln | grep 7077 || ss -tuln | grep 7077"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -53,24 +54,18 @@ services:
       - SPARK_DAEMON_MEMORY=1G
     ports:
       - "8081:8081"
-    volumes:
-      - ./archi_docker/requirement.spark.txt:/tmp/requirements.txt
-    command: >
-      bash -c "
-      export PATH=$PATH:/.local/bin &&
-      pip install --no-warn-script-location -r /tmp/requirements.txt &&
-      /opt/bitnami/scripts/spark/run.sh
-      "
-
-
-  depends_on:
-    - spark-master
-  deploy:
-    resources:
-      limits:
-        cpus: '2'
-        memory: 4G
-  scale: 1
+    depends_on:
+      - spark-master
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+    healthcheck:
+      test: ["CMD-SHELL", "netstat -tuln | grep 8081 || ss -tuln | grep 8081"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
 
   trans_load:
     build:
@@ -87,25 +82,27 @@ services:
         condition: service_healthy
       spark-worker:
         condition: service_healthy
+      kafka:
+        condition: service_started
     env_file: .env
-    volumes:
-      - ./app:/app
     deploy:
       resources:
         limits:
           cpus: '1'
           memory: 2G
-
+    restart: on-failure
 
   producer:
     build:
       context: .
       dockerfile: archi_docker/dockerfile.producer
     depends_on:
-      - kafka
+      kafka:
+        condition: service_started
     env_file: .env
     mem_limit: 512m
     restart: on-failure
+
   api:
     build:
       context: .

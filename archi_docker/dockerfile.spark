@@ -2,14 +2,15 @@ FROM bitnami/spark:3.4
 
 USER root
 
-ENV PATH="/.local/bin:${PATH}"
+ENV PATH="/.local/bin:${PATH}" \
+    PYTHONPATH="${SPARK_HOME}/python:${SPARK_HOME}/python/lib/py4j-0.10.9.7-src.zip"
 
 WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    gcc && \
+    gcc python3-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Python requirements
@@ -29,6 +30,7 @@ USER 1001
 
 CMD ["spark-submit", \
     "--master", "spark://spark-master:7077", \
+    "--conf", "spark.executorEnv.PYTHONPATH=${PYTHONPATH}", \
     "--conf", "spark.executorEnv.PYSPARK_PYTHON=/opt/bitnami/python/bin/python", \
     "--conf", "spark.executorEnv.PYSPARK_DRIVER_PYTHON=/opt/bitnami/python/bin/python", \
     "--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1", \
@@ -36,4 +38,6 @@ CMD ["spark-submit", \
     "--conf", "spark.executor.memory=2g", \
     "--conf", "spark.driver.memory=1g", \
     "--conf", "spark.sql.shuffle.partitions=2", \
+    "--conf", "spark.network.timeout=600s", \
+    "--conf", "spark.executor.heartbeatInterval=300s", \
     "/app/trans_load.py"]
