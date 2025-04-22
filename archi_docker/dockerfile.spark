@@ -3,8 +3,8 @@ FROM bitnami/spark:3.4
 # Définir le répertoire de travail
 WORKDIR /app
 
-# Mise à jour du cache apt et installation de Python
-RUN rm -rf /var/lib/apt/lists/* && \
+# Créer les répertoires nécessaires pour apt et mise à jour
+RUN mkdir -p /var/lib/apt/lists/partial && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
     gcc \
