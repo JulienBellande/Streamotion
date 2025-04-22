@@ -42,6 +42,7 @@ services:
       dockerfile: archi_docker/dockerfile.producer
     depends_on:
       - kafka
+    env_file: .env
 
   api:
     build:
@@ -59,3 +60,4 @@ services:
     depends_on:
       - kafka
       - spark-master
+    env_file: .env
