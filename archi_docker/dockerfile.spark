@@ -1,19 +1,22 @@
-FROM python:3.10-slim
-
-RUN apt-get update && \
-    apt-get install -y openjdk-17-jdk curl gcc g++ && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
-ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-ENV PATH=$JAVA_HOME/bin:$PATH
-
-RUN pip install --upgrade pip
+FROM bitnami/spark:3.4
 
 WORKDIR /app
 
-COPY ./app /app
+# Installer les dépendances Python
 COPY ./archi_docker/requirement.spark.txt /app/requirements.txt
-
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
-CMD ["spark-submit", "--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.3.0", "trans_load.py"]
+# Copier le script
+COPY ./app/trans_load.py /app/
+
+# Créer le dossier pour les checkpoints
+RUN mkdir -p /tmp/checkpoints
+
+CMD ["spark-submit", \
+    "--master", "spark://spark-master:7077", \
+    "--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1", \
+    "--conf", "spark.driver.host=trans_load", \
+    "--conf", "spark.executor.memory=2g", \
+    "--conf", "spark.driver.memory=1g", \
+    "--conf", "spark.sql.shuffle.partitions=2", \
+    "/app/trans_load.py"]

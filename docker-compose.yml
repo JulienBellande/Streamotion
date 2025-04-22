@@ -12,12 +12,13 @@ services:
     image: bitnami/kafka:3.4
     ports:
       - "9092:9092"
+      - "29092:29092"
     environment:
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
       - ALLOW_PLAINTEXT_LISTENER=yes
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,PLAINTEXT_HOST://:29092
       - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
       - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
     depends_on:
@@ -27,14 +28,26 @@ services:
     image: bitnami/spark:3.4
     environment:
       - SPARK_MODE=master
+      - SPARK_MASTER_HOST=spark-master
+      - SPARK_MASTER_PORT=7077
+      - SPARK_MASTER_WEBUI_PORT=8080
     ports:
-      - "4040:4040"
-      - "7077:7077"
       - "8080:8080"
-    volumes:
-      - ./app:/app
+      - "7077:7077"
+      - "4040:4040"
     depends_on:
       - kafka
+
+  spark-worker:
+    image: bitnami/spark:3.4
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=4G
+      - SPARK_WORKER_CORES=2
+    depends_on:
+      - spark-master
+    scale: 1
 
   producer:
     build:
@@ -44,6 +57,20 @@ services:
       - kafka
     env_file: .env
 
+  trans_load:
+    build:
+      context: .
+      dockerfile: archi_docker/dockerfile.spark
+    environment:
+      - SPARK_MASTER_URL=spark://spark-master:7077
+    depends_on:
+      - kafka
+      - spark-master
+      - spark-worker
+    env_file: .env
+    volumes:
+      - ./app:/app
+
   api:
     build:
       context: .
@@ -52,12 +79,3 @@ services:
       - "8000:8000"
     depends_on:
       - kafka
-
-  trans_load:
-    build:
-      context: .
-      dockerfile: archi_docker/dockerfile.spark
-    depends_on:
-      - kafka
-      - spark-master
-    env_file: .env
