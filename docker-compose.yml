@@ -36,10 +36,11 @@ services:
     ports:
       - "8080:8080"
       - "7077:7077"
-      - "4040:4040"
-    depends_on:
-      - kafka
-    mem_limit: 2g
+    healthcheck:
+      test: ["CMD-SHELL", "netstat -tuln | grep 7077"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   spark-worker:
     image: bitnami/spark:3.4
@@ -48,23 +49,28 @@ services:
       - SPARK_MASTER_URL=spark://spark-master:7077
       - SPARK_WORKER_MEMORY=4G
       - SPARK_WORKER_CORES=2
-      - PYSPARK_PYTHON=/opt/bitnami/python/bin/python
-      - PYSPARK_DRIVER_PYTHON=/opt/bitnami/python/bin/python
+      - SPARK_WORKER_WEBUI_PORT=8081
+      - SPARK_DAEMON_MEMORY=1G
+    ports:
+      - "8081:8081"
     volumes:
       - ./archi_docker/requirement.spark.txt:/tmp/requirements.txt
     command: >
       bash -c "
-      pip install --upgrade pip &&
-      pip install -r /tmp/requirements.txt &&
+      export PATH=$PATH:/.local/bin &&
+      pip install --no-warn-script-location -r /tmp/requirements.txt &&
       /opt/bitnami/scripts/spark/run.sh
       "
-    depends_on:
-      - spark-master
-    deploy:
-      resources:
-        limits:
-          memory: 4G
-    scale: 1
+
+
+  depends_on:
+    - spark-master
+  deploy:
+    resources:
+      limits:
+        cpus: '2'
+        memory: 4G
+  scale: 1
 
   trans_load:
     build:
@@ -75,18 +81,20 @@ services:
       - PYTHONUNBUFFERED=1
       - PYSPARK_PYTHON=/opt/bitnami/python/bin/python
       - PYSPARK_DRIVER_PYTHON=/opt/bitnami/python/bin/python
+      - PATH=$PATH:/.local/bin
     depends_on:
-      - kafka
-      - spark-master
-      - spark-worker
+      spark-master:
+        condition: service_healthy
+      spark-worker:
+        condition: service_healthy
     env_file: .env
     volumes:
       - ./app:/app
     deploy:
       resources:
         limits:
-          memory: 4G
-    restart: unless-stopped
+          cpus: '1'
+          memory: 2G
 
 
   producer:

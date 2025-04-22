@@ -2,6 +2,8 @@ FROM bitnami/spark:3.4
 
 USER root
 
+ENV PATH="/.local/bin:${PATH}"
+
 WORKDIR /app
 
 # Install system dependencies
