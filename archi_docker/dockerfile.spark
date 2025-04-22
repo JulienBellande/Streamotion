@@ -2,14 +2,14 @@ FROM bitnami/spark:3.4
 
 WORKDIR /app
 
-# Installer les dépendances Python
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends gcc python3-dev && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY ./archi_docker/requirement.spark.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
-# Copier le script
 COPY ./app/trans_load.py /app/
-
-# Créer le dossier pour les checkpoints
 RUN mkdir -p /tmp/checkpoints
 
 CMD ["spark-submit", \

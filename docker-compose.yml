@@ -7,6 +7,7 @@ services:
       - ALLOW_ANONYMOUS_LOGIN=yes
     ports:
       - "2181:2181"
+    mem_limit: 512m
 
   kafka:
     image: bitnami/kafka:3.4
@@ -23,6 +24,7 @@ services:
       - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
     depends_on:
       - zookeeper
+    mem_limit: 1g
 
   spark-master:
     image: bitnami/spark:3.4
@@ -37,6 +39,7 @@ services:
       - "4040:4040"
     depends_on:
       - kafka
+    mem_limit: 2g
 
   spark-worker:
     image: bitnami/spark:3.4
@@ -47,6 +50,10 @@ services:
       - SPARK_WORKER_CORES=2
     depends_on:
       - spark-master
+    deploy:
+      resources:
+        limits:
+          memory: 4G
     scale: 1
 
   producer:
@@ -56,6 +63,8 @@ services:
     depends_on:
       - kafka
     env_file: .env
+    mem_limit: 512m
+    restart: on-failure
 
   trans_load:
     build:
@@ -63,6 +72,7 @@ services:
       dockerfile: archi_docker/dockerfile.spark
     environment:
       - SPARK_MASTER_URL=spark://spark-master:7077
+      - PYTHONUNBUFFERED=1
     depends_on:
       - kafka
       - spark-master
@@ -70,12 +80,24 @@ services:
     env_file: .env
     volumes:
       - ./app:/app
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+    restart: unless-stopped
 
   api:
     build:
       context: .
       dockerfile: archi_docker/dockerfile.api
+    environment:
+      - TOKENIZERS_PARALLELISM=false
     ports:
       - "8000:8000"
     depends_on:
       - kafka
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+    restart: unless-stopped

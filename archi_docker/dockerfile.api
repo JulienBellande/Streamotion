@@ -1,10 +1,13 @@
-FROM python:3.10-slim
+FROM pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime
 
 WORKDIR /app
 
 COPY ./app /app
 COPY ./archi_docker/requirement.api.txt /app/requirements.txt
 
-RUN pip install --no-cache-dir -r /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends gcc python3-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
