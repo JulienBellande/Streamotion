@@ -50,11 +50,7 @@ services:
     volumes:
       - ./archi_docker/requirement.spark.txt:/tmp/requirements.txt
     command: >
-      bash -c "
-        export PATH=$PATH:/.local/bin &&
-        pip install --no-warn-script-location -r /tmp/requirements.txt &&
-        /opt/bitnami/scripts/spark/run.sh
-      "
+      bash -c "pip install --no-warn-script-location -r /tmp/requirements.txt && /opt/bitnami/scripts/spark/run.sh"
 
   trans_load:
     build:
@@ -86,7 +82,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: archi_docker/Dockerfile.api
+      dockerfile: archi_docker/dockerfile.api
     environment:
       - TOKENIZERS_PARALLELISM=false
     ports:

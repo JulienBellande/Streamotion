@@ -8,19 +8,30 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends gcc && \
     rm -rf /var/lib/apt/lists/*
 
-# Installer les packages Python
-COPY archi_docker/requirement.spark.txt ./requirement.spark.txt
-RUN pip install --upgrade pip \
- && pip install --no-cache-dir -r requirement.spark.txt
+# Installer les packages Python sans conflit de permissions
+COPY archi_docker/requirement.spark.txt ./requirements.txt
+RUN pip install --upgrade pip --root-user-action=ignore && \
+    pip install --no-cache-dir --root-user-action=ignore -r requirements.txt
 
 # Copier le code de l’application
 COPY app/trans_load.py ./trans_load.py
 
 # Préparer le répertoire de checkpoints
-RUN mkdir -p /tmp/checkpoints \
- && chown -R 1001:1001 /tmp/checkpoints /app
+RUN mkdir -p /tmp/checkpoints && \
+    chown -R 1001:1001 /tmp/checkpoints /app
 
+# Switch to non-root user
 USER 1001
 
-ENTRYPOINT ["spark-submit"]
-CMD ["--master", "${SPARK_MASTER_URL}","--conf", "spark.executorEnv.PYSPARK_PYTHON=/opt/bitnami/python/bin/python","--conf", "spark.executorEnv.PYSPARK_DRIVER_PYTHON=/opt/bitnami/python/bin/python","--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1","--conf", "spark.driver.host=trans_load","--conf", "spark.executor.memory=2g","--conf", "spark.driver.memory=1g","--conf", "spark.sql.shuffle.partitions=2","/app/trans_load.py"]
+# Lancement de l’application via spark-submit en shell pour expansion des variables
+CMD ["bash", "-c", \
+  "spark-submit \
+    --master $SPARK_MASTER_URL \
+    --conf spark.executorEnv.PYSPARK_PYTHON=/opt/bitnami/python/bin/python \
+    --conf spark.executorEnv.PYSPARK_DRIVER_PYTHON=/opt/bitnami/python/bin/python \
+    --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1 \
+    --conf spark.driver.host=trans_load \
+    --conf spark.executor.memory=2g \
+    --conf spark.driver.memory=1g \
+    --conf spark.sql.shuffle.partitions=2 \
+    /app/trans_load.py"]

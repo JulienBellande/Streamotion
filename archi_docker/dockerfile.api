@@ -8,12 +8,13 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends gcc python3-dev && \
     rm -rf /var/lib/apt/lists/*
 
+# Installer les packages Python sans conflit de permissions
 COPY archi_docker/requirement.api.txt ./requirements.txt
-RUN pip install --upgrade pip \
- && pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip --root-user-action=ignore && \
+    pip install --no-cache-dir --root-user-action=ignore -r requirements.txt
 
 # Copier le code de l'API
 COPY app /app
 
-USER root
+# Utiliser uvicorn en tant que non-root n’est pas strictement nécessaire
 CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
