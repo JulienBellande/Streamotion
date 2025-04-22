@@ -6,13 +6,13 @@ numpy==2.2.5
 pandas_gbq==0.28.0
 plotly==6.0.1
 praw==7.8.1
-protobuf==3.19.1
+protobuf>=3.20,<6
 pydantic==2.11.3
 python-dotenv==1.1.0
 requests==2.32.3
 scipy==1.15.2
-streamlit
+streamlit==1.44.1
 transformers==4.49.0
 uvicorn==0.22.0
-torch
-tensorflow
+torch==1.13.1
+tensorflow==2.10.1

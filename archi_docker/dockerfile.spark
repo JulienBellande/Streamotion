@@ -1,25 +1,20 @@
+# dockerfile.spark
 FROM python:3.10-slim
 
-# Installer Java + dépendances essentielles
 RUN apt-get update && \
     apt-get install -y openjdk-17-jdk curl gcc g++ && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Définir JAVA_HOME pour Spark
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 ENV PATH=$JAVA_HOME/bin:$PATH
 
-# Installer Spark AVANT requirements
 RUN pip install --upgrade pip
-RUN pip install --no-cache-dir pyspark==3.4.1
+RUN pip install --no-cache-dir pyspark==3.3.0
 
-# Préparer le dossier app
 WORKDIR /app
 COPY ./app/trans_load.py /app/trans_load.py
 COPY ./requirements.txt /app/requirements.txt
 
-# Installer tes autres dépendances
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
-# Lancer le job Spark avec le connecteur Kafka
-CMD ["spark-submit", "--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1", "trans_load.py"]
+CMD ["spark-submit", "--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.3.0", "trans_load.py"]
