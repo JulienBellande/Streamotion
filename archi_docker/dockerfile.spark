@@ -1,11 +1,13 @@
 FROM bitnami/spark:3.4
 
+# Passer en root pour les installations système
+USER root
+
 # Définir le répertoire de travail
 WORKDIR /app
 
-# Créer les répertoires nécessaires pour apt et mise à jour
-RUN mkdir -p /var/lib/apt/lists/partial && \
-    apt-get update && \
+# Installer les dépendances système
+RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     gcc \
     python3.10 \
@@ -19,13 +21,18 @@ RUN mkdir -p /var/lib/apt/lists/partial && \
 COPY ./archi_docker/requirement.spark.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
-# Copier les scripts nécessaires dans l'image Docker
+# Copier les scripts nécessaires
 COPY ./app/trans_load.py /app/
 
 # Créer le répertoire pour les checkpoints
-RUN mkdir -p /tmp/checkpoints
+RUN mkdir -p /tmp/checkpoints && \
+    chown -R 1001:1001 /tmp/checkpoints && \
+    chown -R 1001:1001 /app
 
-# Définir la commande pour démarrer Spark
+# Revenir à l'utilisateur non-root pour l'exécution
+USER 1001
+
+# Commande pour démarrer Spark
 CMD ["spark-submit", \
     "--master", "spark://spark-master:7077", \
     "--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1", \
