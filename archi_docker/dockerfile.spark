@@ -21,5 +21,5 @@ COPY ./requirements.txt /app/requirements.txt
 # Installer tes autres dépendances
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
-# Lancer le job Spark
-CMD ["spark-submit", "trans_load.py"]
+# Lancer le job Spark avec le connecteur Kafka
+CMD ["spark-submit", "--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1", "trans_load.py"]
