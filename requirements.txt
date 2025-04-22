@@ -1,7 +1,6 @@
 deep_translator==1.11.4
 fastapi==0.115.12
 ipywidgets==8.1.6
-kafka==1.3.5
 kafka_python==2.1.5
 numpy==2.2.5
 pandas_gbq==0.28.0
