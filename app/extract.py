@@ -18,7 +18,7 @@ reddit = praw.Reddit(
     user_agent=os.getenv("USER_AGENT")
 )
 producer = KafkaProducer(
-    bootstrap_servers='localhost:9092',
+    bootstrap_servers='kafka:9092',
     value_serializer=lambda v: json.dumps(v).encode('utf-8'),
     api_version=(2, 5, 0)
 )

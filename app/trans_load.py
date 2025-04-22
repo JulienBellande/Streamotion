@@ -39,7 +39,7 @@ spark = SparkSession.builder \
 logger.info("Démarrage de l'application Spark...")
 
 kafka_options = {
-    "kafka.bootstrap.servers": "localhost:9092",
+    "kafka.bootstrap.servers": "kafka:9092",
     "subscribe": "reddit_comments",
     "startingOffsets": "earliest"
 }
