@@ -36,11 +36,6 @@ services:
     ports:
       - "8080:8080"
       - "7077:7077"
-    healthcheck:
-      test: ["CMD-SHELL", "netstat -tuln | grep 7077"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   spark-worker:
     image: bitnami/spark:3.4
@@ -52,14 +47,6 @@ services:
       - SPARK_WORKER_WEBUI_PORT=8081
     ports:
       - "8081:8081"
-    depends_on:
-      spark-master:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "netstat -tuln | grep 8081"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     volumes:
       - ./archi_docker/requirement.spark.txt:/tmp/requirements.txt
     command: >
@@ -79,10 +66,8 @@ services:
       - PYSPARK_PYTHON=/opt/bitnami/python/bin/python
       - PYSPARK_DRIVER_PYTHON=/opt/bitnami/python/bin/python
     depends_on:
-      spark-master:
-        condition: service_healthy
-      spark-worker:
-        condition: service_healthy
+      - spark-master
+      - spark-worker
     volumes:
       - ./app:/app
     mem_limit: 2g
@@ -101,7 +86,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: archi_docker/dockerfile.api
+      dockerfile: archi_docker/Dockerfile.api
     environment:
       - TOKENIZERS_PARALLELISM=false
     ports:
