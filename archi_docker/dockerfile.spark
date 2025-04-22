@@ -2,19 +2,23 @@ FROM bitnami/spark:3.4
 
 WORKDIR /app
 
-RUN mkdir -p /var/lib/apt/lists/partial && \
-    apt-get update && \
+# 🔐 Passer en root pour installer les paquets système
+USER root
+RUN apt-get update && \
     apt-get install -y --no-install-recommends gcc python3-dev && \
     rm -rf /var/lib/apt/lists/*
 
-# Installer les dépendances Python
+# ⬇️ Revenir à l'utilisateur non-root de Bitnami
+USER 1001
+
+# Copier et installer les dépendances Python
 COPY ./archi_docker/requirement.spark.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # Copier le script Spark
 COPY ./app/trans_load.py /app/
 
-# Créer le dossier de checkpoints
+# Créer le dossier checkpoints
 RUN mkdir -p /tmp/checkpoints
 
 # Lancer Spark avec les bons paramètres
