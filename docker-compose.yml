@@ -48,6 +48,16 @@ services:
       - SPARK_MASTER_URL=spark://spark-master:7077
       - SPARK_WORKER_MEMORY=4G
       - SPARK_WORKER_CORES=2
+      - PYSPARK_PYTHON=/opt/bitnami/python/bin/python
+      - PYSPARK_DRIVER_PYTHON=/opt/bitnami/python/bin/python
+    volumes:
+      - ./archi_docker/requirement.spark.txt:/tmp/requirements.txt
+    command: >
+      bash -c "
+      pip install --upgrade pip &&
+      pip install -r /tmp/requirements.txt &&
+      /opt/bitnami/scripts/spark/run.sh
+      "
     depends_on:
       - spark-master
     deploy:
@@ -56,16 +66,6 @@ services:
           memory: 4G
     scale: 1
 
-  producer:
-    build:
-      context: .
-      dockerfile: archi_docker/dockerfile.producer
-    depends_on:
-      - kafka
-    env_file: .env
-    mem_limit: 512m
-    restart: on-failure
-
   trans_load:
     build:
       context: .
@@ -73,6 +73,8 @@ services:
     environment:
       - SPARK_MASTER_URL=spark://spark-master:7077
       - PYTHONUNBUFFERED=1
+      - PYSPARK_PYTHON=/opt/bitnami/python/bin/python
+      - PYSPARK_DRIVER_PYTHON=/opt/bitnami/python/bin/python
     depends_on:
       - kafka
       - spark-master
@@ -86,6 +88,16 @@ services:
           memory: 4G
     restart: unless-stopped
 
+
+  producer:
+    build:
+      context: .
+      dockerfile: archi_docker/dockerfile.producer
+    depends_on:
+      - kafka
+    env_file: .env
+    mem_limit: 512m
+    restart: on-failure
   api:
     build:
       context: .
