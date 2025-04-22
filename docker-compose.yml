@@ -72,7 +72,7 @@ services:
   trans_load:
     build:
       context: .
-      dockerfile: archi_docker/Dockerfile.spark
+      dockerfile: archi_docker/dockerfile.spark
     env_file: .env
     environment:
       - SPARK_MASTER_URL=spark://spark-master:7077
@@ -101,7 +101,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: archi_docker/Dockerfile.api
+      dockerfile: archi_docker/dockerfile.api
     environment:
       - TOKENIZERS_PARALLELISM=false
     ports:
