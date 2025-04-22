@@ -1,43 +1,26 @@
 FROM bitnami/spark:3.4
 
 USER root
-
-ENV PATH="/.local/bin:${PATH}" \
-    PYTHONPATH="${SPARK_HOME}/python:${SPARK_HOME}/python/lib/py4j-0.10.9.7-src.zip"
-
 WORKDIR /app
 
-# Install system dependencies
+# Installer gcc pour compiler les dépendances Python
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    gcc python3-dev && \
+    apt-get install -y --no-install-recommends gcc && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Python requirements
-COPY ./archi_docker/requirement.spark.txt /app/requirements.txt
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Installer les packages Python
+COPY archi_docker/requirement.spark.txt ./requirement.spark.txt
+RUN pip install --upgrade pip \
+ && pip install --no-cache-dir -r requirement.spark.txt
 
-# Copy application code
-COPY ./app/trans_load.py /app/
+# Copier le code de l’application
+COPY app/trans_load.py ./trans_load.py
 
-# Set up checkpoint directory
-RUN mkdir -p /tmp/checkpoints && \
-    chown -R 1001:1001 /tmp/checkpoints && \
-    chown -R 1001:1001 /app
+# Préparer le répertoire de checkpoints
+RUN mkdir -p /tmp/checkpoints \
+ && chown -R 1001:1001 /tmp/checkpoints /app
 
 USER 1001
 
-CMD ["spark-submit", \
-    "--master", "spark://spark-master:7077", \
-    "--conf", "spark.executorEnv.PYTHONPATH=${PYTHONPATH}", \
-    "--conf", "spark.executorEnv.PYSPARK_PYTHON=/opt/bitnami/python/bin/python", \
-    "--conf", "spark.executorEnv.PYSPARK_DRIVER_PYTHON=/opt/bitnami/python/bin/python", \
-    "--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1", \
-    "--conf", "spark.driver.host=trans_load", \
-    "--conf", "spark.executor.memory=2g", \
-    "--conf", "spark.driver.memory=1g", \
-    "--conf", "spark.sql.shuffle.partitions=2", \
-    "--conf", "spark.network.timeout=600s", \
-    "--conf", "spark.executor.heartbeatInterval=300s", \
-    "/app/trans_load.py"]
+ENTRYPOINT ["spark-submit"]
+CMD ["--master", "${SPARK_MASTER_URL}","--conf", "spark.executorEnv.PYSPARK_PYTHON=/opt/bitnami/python/bin/python","--conf", "spark.executorEnv.PYSPARK_DRIVER_PYTHON=/opt/bitnami/python/bin/python","--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1","--conf", "spark.driver.host=trans_load","--conf", "spark.executor.memory=2g","--conf", "spark.driver.memory=1g","--conf", "spark.sql.shuffle.partitions=2","/app/trans_load.py"]
