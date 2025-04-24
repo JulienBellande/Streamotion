@@ -2,27 +2,28 @@ FROM bitnami/spark:3.4
 USER root
 WORKDIR /app
 
-# Installer gcc
-RUN apt-get update && apt-get install -y --no-install-recommends gcc && rm -rf /var/lib/apt/lists/*
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends gcc \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Dépendances Python
-COPY requirements.txt ./requirements.txt
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+COPY requirement.spark.txt ./requirement.spark.txt
+RUN pip install --upgrade pip \
+ && pip install --no-cache-dir -r requirement.spark.txt \
+ && rm -rf ~/.cache/pip
 
-# Code et checkpoints
 COPY trans_load.py ./
-RUN mkdir -p /tmp/checkpoints && chown -R 1001:1001 /tmp/checkpoints /app
+
+RUN mkdir -p /tmp/checkpoints \
+ && chown -R 1001:1001 /tmp/checkpoints /app
 USER 1001
 
-CMD ["bash", "-c", \
-  "spark-submit \
-    --master $SPARK_MASTER_URL \
-    --conf spark.executorEnv.PYSPARK_PYTHON=/opt/bitnami/python/bin/python \
-    --conf spark.executorEnv.PYSPARK_DRIVER_PYTHON=/opt/bitnami/python/bin/python \
-    --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1 \
-    --conf spark.driver.host=trans_load \
-    --conf spark.executor.memory=2g \
-    --conf spark.driver.memory=1g \
-    --conf spark.sql.shuffle.partitions=2 \
-    /app/trans_load.py"]
+CMD ["bash","-c","spark-submit --master $SPARK_MASTER_URL \
+  --conf spark.executorEnv.PYSPARK_PYTHON=/opt/bitnami/python/bin/python \
+  --conf spark.executorEnv.PYSPARK_DRIVER_PYTHON=/opt/bitnami/python/bin/python \
+  --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1 \
+  --conf spark.driver.host=trans_load \
+  --conf spark.executor.memory=2g \
+  --conf spark.driver.memory=1g \
+  --conf spark.sql.shuffle.partitions=2 \
+  /app/trans_load.py"]
