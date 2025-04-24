@@ -54,7 +54,7 @@ services:
     ports:
       - "8081:8081"
     volumes:
-      - ./archi_docker/requirement.spark.txt:/tmp/requirements.txt
+      - ./app/transform/requirement.spark.txt:/tmp/requirements.txt
     command: >
       bash -c "
         pip install --no-warn-script-location -r /tmp/requirements.txt &&
