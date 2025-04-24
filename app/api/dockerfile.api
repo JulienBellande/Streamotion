@@ -9,7 +9,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Installer les packages Python sans conflit de permissions
-COPY archi_docker/requirement.api.txt ./requirements.txt
+COPY requirement.api.txt ./requirements.txt
 RUN pip install --upgrade pip --root-user-action=ignore && \
     pip install --no-cache-dir --root-user-action=ignore -r requirements.txt
 
