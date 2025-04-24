@@ -24,3 +24,7 @@ class TextInput(BaseModel):
 def predict_sentiment(payload: TextInput):
     result = agent.predict(payload.text)
     return {"emotion_predict": result}
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
