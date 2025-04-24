@@ -64,7 +64,7 @@ services:
   trans_load:
     build:
       context: .
-      dockerfile: archi_docker/dockerfile.spark
+      dockerfile: transform/dockerfile.spark
     env_file: .env
     environment:
       - SPARK_MASTER_URL=spark://spark-master:7077
@@ -82,7 +82,7 @@ services:
   producer:
     build:
       context: .
-      dockerfile: archi_docker/dockerfile.producer
+      dockerfile: producer/dockerfile.producer
     env_file: .env
     depends_on:
       - kafka
@@ -92,7 +92,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: archi_docker/dockerfile.api
+      dockerfile: api/dockerfile.api
     environment:
       - TOKENIZERS_PARALLELISM=false
     ports:
