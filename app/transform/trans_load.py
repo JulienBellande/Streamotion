@@ -14,7 +14,6 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# GCP
 gcp_key = json.loads(os.getenv("GCP_KEY"))
 bq_client = bigquery.Client.from_service_account_info(gcp_key)
 gbq_credentials = service_account.Credentials.from_service_account_info(gcp_key)
