@@ -1,29 +1,20 @@
 FROM bitnami/spark:3.4
-
 USER root
 WORKDIR /app
 
-# Installer gcc pour compiler les dépendances Python
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends gcc && \
-    rm -rf /var/lib/apt/lists/*
+# Installer gcc
+RUN apt-get update && apt-get install -y --no-install-recommends gcc && rm -rf /var/lib/apt/lists/*
 
-# Installer les packages Python sans conflit de permissions
-COPY archi_docker/requirement.spark.txt ./requirements.txt
-RUN pip install --upgrade pip --root-user-action=ignore && \
-    pip install --no-cache-dir --root-user-action=ignore -r requirements.txt
+# Dépendances Python
+COPY requirements.txt ./requirements.txt
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Copier le code de l’application
-COPY app/trans_load.py ./trans_load.py
-
-# Préparer le répertoire de checkpoints
-RUN mkdir -p /tmp/checkpoints && \
-    chown -R 1001:1001 /tmp/checkpoints /app
-
-# Switch to non-root user
+# Code et checkpoints
+COPY trans_load.py ./
+RUN mkdir -p /tmp/checkpoints && chown -R 1001:1001 /tmp/checkpoints /app
 USER 1001
 
-# Lancement de l’application via spark-submit en shell pour expansion des variables
 CMD ["bash", "-c", \
   "spark-submit \
     --master $SPARK_MASTER_URL \

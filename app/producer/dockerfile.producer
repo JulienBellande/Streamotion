@@ -1,12 +1,15 @@
 FROM python:3.10-slim
-
 WORKDIR /app
 
-COPY archi_docker/requirement.producer.txt ./
-RUN pip install --upgrade pip --root-user-action=ignore \
- && pip install --no-cache-dir -r requirement.producer.txt \
- && pip install praw==7.8.1
+# Système
+RUN apt-get update && apt-get install -y --no-install-recommends gcc && rm -rf /var/lib/apt/lists/*
 
-COPY app/extract.py ./
+# Dépendances Python
+COPY requirements.txt ./requirements.txt
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Code
+COPY extract.py ./
 
 CMD ["python", "extract.py"]

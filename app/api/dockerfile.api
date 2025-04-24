@@ -1,20 +1,22 @@
-FROM pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime
-
-USER root
+FROM python:3.10-slim
 WORKDIR /app
 
-# Installer les dépendances système avant pip
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends gcc python3-dev && \
-    rm -rf /var/lib/apt/lists/*
+# Système
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc python3-dev curl && rm -rf /var/lib/apt/lists/*
 
-# Installer les packages Python sans conflit de permissions
-COPY requirement.api.txt ./requirements.txt
-RUN pip install --upgrade pip --root-user-action=ignore && \
-    pip install --no-cache-dir --root-user-action=ignore -r requirements.txt
+# Dépendances Python
+COPY requirements.txt ./requirements.txt
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Copier le code de l'API
-COPY app /app
+# Code
+COPY src/ ./src/
+ENV PYTHONPATH=/app/src
 
-# Utiliser uvicorn en tant que non-root n’est pas strictement nécessaire
-CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+# Expose et healthcheck
+EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=3s \
+  CMD curl -f http://localhost:8000/health || exit 1
+
+CMD ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]

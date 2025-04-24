@@ -4,104 +4,86 @@ services:
   zookeeper:
     image: bitnami/zookeeper:3.8
     environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
+      ALLOW_ANONYMOUS_LOGIN: 'yes'
     ports:
-      - "2181:2181"
-    mem_limit: 512m
+      - '2181:2181'
+    networks:
+      - backend
 
   kafka:
     image: bitnami/kafka:3.4
-    ports:
-      - "9092:9092"
-      - "29092:29092"
     environment:
-      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-      - ALLOW_PLAINTEXT_LISTENER=yes
-      - KAFKA_CREATE_TOPICS=reddit_comments:1:1
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,PLAINTEXT_HOST://:29092
-      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
-      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+      ALLOW_PLAINTEXT_LISTENER: 'yes'
+      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CFG_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CREATE_TOPICS: reddit_comments:1:1
     depends_on:
       - zookeeper
-    mem_limit: 1g
+    ports:
+      - '9092:9092'
+    networks:
+      - backend
 
   spark-master:
     image: bitnami/spark:3.4
     environment:
-      - SPARK_MODE=master
-      - SPARK_MASTER_HOST=spark-master
-      - SPARK_MASTER_PORT=7077
-      - SPARK_MASTER_WEBUI_PORT=8080
+      SPARK_MODE: master
+      SPARK_MASTER_HOST: spark-master
     ports:
-      - "8080:8080"
-      - "7077:7077"
-    healthcheck:
-      test: ["CMD-SHELL", "netstat -tuln | grep 7077"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - '7077:7077'
+      - '8080:8080'
+    networks:
+      - backend
 
   spark-worker:
     image: bitnami/spark:3.4
     environment:
-      - SPARK_MODE=worker
-      - SPARK_MASTER_URL=spark://spark-master:7077
-      - SPARK_WORKER_MEMORY=4G
-      - SPARK_WORKER_CORES=2
-      - SPARK_WORKER_WEBUI_PORT=8081
-    ports:
-      - "8081:8081"
-    volumes:
-      - ./app/transform/requirement.spark.txt:/tmp/requirements.txt
-    command: >
-      bash -c "
-        pip install --no-warn-script-location -r /tmp/requirements.txt &&
-        /opt/bitnami/scripts/spark/run.sh
-      "
-
-  trans_load:
-    build:
-      context: .
-      dockerfile: app/transform/dockerfile.spark
-    env_file: .env
-    environment:
-      - SPARK_MASTER_URL=spark://spark-master:7077
-      - PYSPARK_PYTHON=/opt/bitnami/python/bin/python
-      - PYSPARK_DRIVER_PYTHON=/opt/bitnami/python/bin/python
+      SPARK_MODE: worker
+      SPARK_MASTER_URL: spark://spark-master:7077
     depends_on:
       - spark-master
-      - spark-worker
-    volumes:
-      - ./app:/app
-      - ./checkpoints:/tmp/checkpoints
-    mem_limit: 2g
-    cpus: '1'
-
-  producer:
-    build:
-      context: .
-      dockerfile: app/producer/dockerfile.producer
-    env_file: .env
-    depends_on:
-      - kafka
-    mem_limit: 512m
-    restart: on-failure
+    networks:
+      - backend
 
   api:
     build:
-      context: .
-      dockerfile: app/api/dockerfile.api
-    environment:
-      - TOKENIZERS_PARALLELISM=false
+      context: ./app/api
+      dockerfile: Dockerfile
+    env_file: .env
     ports:
-      - "8000:8000"
+      - "${API_PORT}:8000"
     depends_on:
       - kafka
-    mem_limit: 2g
+    networks:
+      - backend
     restart: unless-stopped
 
+  producer:
+    build:
+      context: ./app/producer
+      dockerfile: Dockerfile
+    env_file: .env
+    depends_on:
+      - kafka
+    networks:
+      - backend
+    restart: on-failure
+
+  trans_load:
+    build:
+      context: ./app/transform
+      dockerfile: Dockerfile
+    env_file: .env
+    depends_on:
+      - kafka
+      - spark-master
+    networks:
+      - backend
+    volumes:
+      - ./checkpoints:/tmp/checkpoints
+    restart: on-failure
+
 networks:
-  default:
-    name: spark_network
+  backend:
+    driver: bridge
