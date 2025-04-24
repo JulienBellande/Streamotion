@@ -1,15 +1,15 @@
 FROM python:3.10-slim
 WORKDIR /app
 
-# Système
-RUN apt-get update && apt-get install -y --no-install-recommends gcc && rm -rf /var/lib/apt/lists/*
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends gcc \
+ && rm -rf /var/lib/apt/lists/*
 
-# Dépendances Python
-COPY requirements.txt ./requirements.txt
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+COPY requirement.producer.txt ./requirement.producer.txt
+RUN pip install --upgrade pip \
+ && pip install --no-cache-dir -r requirement.producer.txt \
+ && rm -rf ~/.cache/pip
 
-# Code
 COPY extract.py ./
 
 CMD ["python", "extract.py"]
