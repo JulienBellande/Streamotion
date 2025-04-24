@@ -51,8 +51,12 @@ services:
       context: ./app/api
       dockerfile: Dockerfile
     env_file: .env
+    # Option A : port fixe
     ports:
-      - "${API_PORT}:8000"
+      - '8000:8000'
+    # Option B : port variable avec fallback
+    # ports:
+    #   - "${API_PORT:-8000}:8000"
     depends_on:
       - kafka
     networks:
