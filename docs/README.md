@@ -23,19 +23,36 @@ Streamotion est un projet d'analyse en temps réel des émotions des utilisateur
 ```bash
 .
 ├── app
-│   ├── api.py
-│   ├── extract.py
-│   └── trans_load.py
-├── archi_docker
-│   ├── dockerfile.api
-│   ├── dockerfile.produceur
-│   └── dockerfile.spark
+│   ├── __pycache__
+│   │   ├── api.cpython-310.pyc
+│   │   ├── trans_load.cpython-310-pytest-8.3.5.pyc
+│   │   └── trans_load.cpython-310.pyc
+│   ├── api
+│   │   ├── dockerfile.api
+│   │   ├── requirement.api.txt
+│   │   └── src
+│   │       └── api.py
+│   ├── producer
+│   │   ├── dockerfile.producer
+│   │   ├── extract.py
+│   │   └── requirement.producer.txt
+│   └── transform
+│       ├── dockerfile.spark
+│       ├── requirement.spark.txt
+│       └── trans_load.py
 ├── docker-compose.yml
-├── graph.py
+├── docs
+│   └── README.md
+├── graph
+│   └── graph.py
 ├── main.py
 ├── requirements.txt
-└── tests/
-    ├── tests.py
+└── tests
+    ├── __pycache__
+    │   ├── test_E2E_pipeline.cpython-310-pytest-8.3.5.pyc
+    │   ├── test_ete_pipeline.cpython-310-pytest-8.3.5.pyc
+    │   └── tests.cpython-310-pytest-8.3.5.pyc
+    └── tests.py
 ```
 
 ---
