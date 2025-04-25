@@ -1,5 +1,5 @@
 import streamlit as st
-from graph import Graph
+from graph.graph import Graph
 import time
 import os
 
